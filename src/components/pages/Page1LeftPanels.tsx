@@ -53,12 +53,12 @@ function PanelHeader({
       </Box>
 
       <Tooltip title={isOpen ? "Einklappen" : "Ausklappen"}>
-        <IconButton
-          size="small"
-          onClick={onToggle}
-          sx={{ color: "#bbb" }}
-        >
-          {isOpen ? <ExpandMoreIcon fontSize="small" /> : <ChevronRightIcon fontSize="small" />}
+        <IconButton size="small" onClick={onToggle} sx={{ color: "#bbb" }}>
+          {isOpen ? (
+            <ExpandMoreIcon fontSize="small" />
+          ) : (
+            <ChevronRightIcon fontSize="small" />
+          )}
         </IconButton>
       </Tooltip>
     </Box>
@@ -75,6 +75,9 @@ export default function LeftPanels({
   onChange: (patch: Partial<WorkspaceState>) => void;
 }) {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  // Refs auf die Content-Container, um echte px-Höhen zu messen
+  const contentRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
 
   const openKeys = ORDER.filter((k) => open[k]);
   const openCount = openKeys.length;
@@ -96,33 +99,79 @@ export default function LeftPanels({
     onChange({ page1PanelsOpen: nextOpen });
   };
 
-  // Drag zwischen zwei offenen Panels: wir ändern ihre "weights"
+  // Helper: liefert für jedes Panel den "nächsten offenen" PanelKey,
+  // damit wir Resizer nur zwischen offenen malen
+  const nextOpenAfter = (key: PanelKey): PanelKey | null => {
+    const idx = ORDER.indexOf(key);
+    for (let i = idx + 1; i < ORDER.length; i++) {
+      const k = ORDER[i];
+      if (open[k]) return k;
+    }
+    return null;
+  };
+
+  /**
+   * Drag-State:
+   * Wir arbeiten beim Drag in PIXELN (1:1 Gefühl):
+   * - messen startPxA/startPxB (Content-Höhen)
+   * - dy addiert/subtrahiert px
+   * - clamp so, dass beide >= minPx
+   * - zurück nach weights: weight ~ px (proportional)
+   */
   const dragState = React.useRef<{
     a: PanelKey;
     b: PanelKey;
     startY: number;
+
+    // Pixel-Basis
+    startPxA: number;
+    startPxB: number;
+    sumPx: number;
+
+    // Weight-Basis (für Rückrechnung)
     startWA: number;
     startWB: number;
-    heightAvailable: number;
+    sumW: number;
+
+    // Limits
+    minPx: number;
   } | null>(null);
 
   const beginDrag = (a: PanelKey, b: PanelKey) => (e: React.MouseEvent) => {
     e.preventDefault();
     if (!containerRef.current) return;
 
-    // verfügbare Höhe (gesamt minus Header minus Resizer)
-    const rect = containerRef.current.getBoundingClientRect();
-    const resizerCount = Math.max(0, openCount - 1);
-    const heightAvailable =
-      rect.height - ORDER.length * HEADER_H - resizerCount * RESIZER_H;
+    const elA = contentRefs.current[a] ?? null;
+    const elB = contentRefs.current[b] ?? null;
+
+    // Falls refs nicht da sind, keinen Drag starten
+    if (!elA || !elB) return;
+
+    const rectA = elA.getBoundingClientRect();
+    const rectB = elB.getBoundingClientRect();
+
+    const startPxA = rectA.height;
+    const startPxB = rectB.height;
+    const sumPx = Math.max(1, startPxA + startPxB);
+
+    const startWA = weights[a] ?? 1;
+    const startWB = weights[b] ?? 1;
+    const sumW = Math.max(0.0001, startWA + startWB);
+
+    // Minimum Content-Höhe, damit es nicht "zusammenklappt"
+    const minPx = 60;
 
     dragState.current = {
       a,
       b,
       startY: e.clientY,
-      startWA: weights[a] ?? 1,
-      startWB: weights[b] ?? 1,
-      heightAvailable: Math.max(120, heightAvailable),
+      startPxA,
+      startPxB,
+      sumPx,
+      startWA,
+      startWB,
+      sumW,
+      minPx,
     };
   };
 
@@ -131,25 +180,29 @@ export default function LeftPanels({
       if (!dragState.current) return;
       const d = dragState.current;
 
-      // Pixel -> weight delta: proportional zur verfügbaren Höhe
       const dy = e.clientY - d.startY;
 
-      // wie stark reagieren? 1 "weight" ~ 120px (grob)
-      const scale = d.heightAvailable / 6; // je größer der Container, desto sanfter
-      const deltaW = dy / scale;
+      // 1:1 in Pixeln verschieben
+      let nextPxA = d.startPxA + dy;
+      let nextPxB = d.startPxB - dy;
 
-      let nextA = d.startWA + deltaW;
-      let nextB = d.startWB - deltaW;
+      // Paired clamp (wichtig!): beide müssen >= minPx bleiben
+      const loA = d.minPx;
+      const hiA = d.sumPx - d.minPx;
 
-      // clamp: beide müssen >0 bleiben
-      nextA = clamp(nextA, 0.2, 100);
-      nextB = clamp(nextB, 0.2, 100);
+      nextPxA = clamp(nextPxA, loA, hiA);
+      nextPxB = d.sumPx - nextPxA;
+
+      // px -> weights proportional zur ursprünglichen Weight-Summe der beiden
+      const fracA = nextPxA / d.sumPx;
+      const nextWA = clamp(d.sumW * fracA, 0.2, 100);
+      const nextWB = clamp(d.sumW - nextWA, 0.2, 100);
 
       onChange({
         page1PanelWeights: {
           ...weights,
-          [d.a]: nextA,
-          [d.b]: nextB,
+          [d.a]: nextWA,
+          [d.b]: nextWB,
         },
       });
     };
@@ -164,17 +217,7 @@ export default function LeftPanels({
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, [onChange, openCount, weights]);
-
-  // Helper: liefert für jedes Panel den "nächsten offenen" PanelKey, damit wir Resizer nur zwischen offenen malen
-  const nextOpenAfter = (key: PanelKey): PanelKey | null => {
-    const idx = ORDER.indexOf(key);
-    for (let i = idx + 1; i < ORDER.length; i++) {
-      const k = ORDER[i];
-      if (open[k]) return k;
-    }
-    return null;
-  };
+  }, [onChange, weights]);
 
   return (
     <Box
@@ -204,6 +247,9 @@ export default function LeftPanels({
 
             {/* Content Area */}
             <Box
+              ref={(node) => {
+                contentRefs.current[key] = node;
+              }}
               sx={{
                 flexGrow: getGrow(key),
                 flexBasis: 0,
@@ -219,7 +265,8 @@ export default function LeftPanels({
                 Placeholder Content für <b>{TITLES[key]}</b>
               </Typography>
               <Typography sx={{ fontSize: 12, opacity: 0.7, mt: 1 }}>
-                Öffne 2 Panels → sie teilen sich die Höhe. Ziehe den Splitter dazwischen.
+                Öffne 2 Panels → sie teilen sich die Höhe. Ziehe den Splitter
+                dazwischen.
               </Typography>
             </Box>
 
