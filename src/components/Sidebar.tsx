@@ -39,7 +39,7 @@ export default function Sidebar({
         flexDirection: "column",
       }}
     >
-      <Box sx={{ height: 40, display: "flex", alignItems: "center", px: 1 }}>
+      <Box sx={{ height: 40, display: "flex", alignItems: "center", px: 1, mt: 2 }}>
         <Tooltip title={expanded ? "Einklappen" : "Ausklappen"}>
           <IconButton size="small" onClick={onToggleExpanded} sx={{ color: "#ddd" }}>
             {expanded ? <ChevronLeftIcon /> : <ChevronRightIcon />}
@@ -56,7 +56,7 @@ export default function Sidebar({
             "&.Mui-selected:hover": { bgcolor: "rgba(255,255,255,0.10)" },
           }}
         >
-          <ListItemIcon sx={{ minWidth: 40, color: "inherit" }}>
+          <ListItemIcon sx={{ minWidth: 40, color: "inherit", my: 1 }}>
             <DescriptionIcon fontSize="small" />
           </ListItemIcon>
           {expanded && <ListItemText primary="Seite 1" primaryTypographyProps={{ fontSize: 12 }} />}
@@ -70,7 +70,7 @@ export default function Sidebar({
             "&.Mui-selected:hover": { bgcolor: "rgba(255,255,255,0.10)" },
           }}
         >
-          <ListItemIcon sx={{ minWidth: 40, color: "inherit" }}>
+          <ListItemIcon sx={{ minWidth: 40, color: "inherit", my: 1 }}>
             <SettingsIcon fontSize="small" />
           </ListItemIcon>
           {expanded && <ListItemText primary="Seite 2" primaryTypographyProps={{ fontSize: 12 }} />}

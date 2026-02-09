@@ -15,12 +15,12 @@ type PanelKey = keyof Page1PanelsOpen;
 const ORDER: PanelKey[] = ["tabs", "outline", "timeline"];
 
 const TITLES: Record<PanelKey, string> = {
-  tabs: "Tabs",
-  outline: "Outline",
-  timeline: "Timeline",
+  tabs: "Route",
+  outline: "Layer",
+  timeline: "Heatmap",
 };
 
-const HEADER_H = 34;
+const HEADER_H = 28;
 
 function PanelHeader({
   title,
@@ -41,14 +41,24 @@ function PanelHeader({
         justifyContent: "space-between",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         bgcolor: "#252526",
+        cursor: "pointer",
+        userSelect: "none",
       }}
+      onClick={onToggle}
     >
-      <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#ddd" }}>
+      <Typography sx={{ fontSize: 10, fontWeight: 600, color: "#ddd" }}>
         {title}
       </Typography>
 
       <Tooltip title={isOpen ? "Einklappen" : "Ausklappen"}>
-        <IconButton size="small" onClick={onToggle} sx={{ color: "#bbb" }}>
+        <IconButton
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+          sx={{ color: "#bbb" }}
+        >
           {isOpen ? (
             <ExpandMoreIcon fontSize="small" />
           ) : (
