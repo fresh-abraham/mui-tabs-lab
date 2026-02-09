@@ -39,7 +39,7 @@ function HeaderDropDown({ label }: { label: string }) {
         onClick={m.openMenu}
         sx={{
           cursor: "pointer",
-          fontSize: 12,
+          fontSize: 10,
           px: 1,
           py: 0.5,
           borderRadius: 1,
@@ -82,25 +82,25 @@ export default function HeaderBar({
     <AppBar position="static" elevation={0} sx={{ bgcolor: "#1f1f1f" }}>
       <Toolbar
         variant="dense"
-        sx={{ minHeight: 36, height: 36, px: 1, gap: 1 }}
+        sx={{ minHeight: 32, height: 24, px: 1, gap: 1, color: "#ccc" }}
       >
         {/* Logo */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, pr: 1 }}>
           <Box
             sx={{
-              width: 18,
-              height: 18,
+              width: 14,
+              height: 14,
               borderRadius: 0.5,
-              bgcolor: "#4fc3f7",
+              bgcolor: "#40e92a",
             }}
           />
-          <Typography sx={{ fontSize: 12, opacity: 0.9 }}>
-            MyApp
+          <Typography sx={{ fontSize: 10, opacity: 0.9 }}>
+            Genosk Development
           </Typography>
         </Box>
 
         {/* Header links as dropdowns */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, fontSize: 10 }}>
           <HeaderDropDown label="File" />
           <HeaderDropDown label="Edit" />
           <HeaderDropDown label="View" />
@@ -116,12 +116,12 @@ export default function HeaderBar({
             variant="scrollable"
             scrollButtons="auto"
             sx={{
-              minHeight: 32,
-              height: 32,
+              minHeight: 24,
+              height: 24,
               "& .MuiTab-root": {
-                minHeight: 32,
-                height: 32,
-                fontSize: 12,
+                minHeight: 24,
+                height: 24,
+                fontSize: 10,
                 textTransform: "none",
                 px: 1,
               },

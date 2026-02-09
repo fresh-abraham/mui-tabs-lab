@@ -1,6 +1,10 @@
 import * as React from "react";
 import { Box } from "@mui/material";
 
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
 export default function ResizableSplit({
   leftWidth,
   onLeftWidthChange,
@@ -16,29 +20,32 @@ export default function ResizableSplit({
   minLeft?: number;
   maxLeft?: number;
 }) {
-  const draggingRef = React.useRef(false);
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const dragRef = React.useRef<{ dragging: boolean; startX: number; startW: number } | null>(null);
 
   const onMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
-    draggingRef.current = true;
+    dragRef.current = { dragging: true, startX: e.clientX, startW: leftWidth };
   };
 
   React.useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      if (!draggingRef.current) return;
-      const x = e.clientX;
+      if (!dragRef.current?.dragging) return;
+      const root = rootRef.current;
+      if (!root) return;
 
-      // wir messen relativ zum Split-Container
-      const container = document.getElementById("split-root");
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
-      const next = Math.max(minLeft, Math.min(maxLeft, x - rect.left));
+      const rect = root.getBoundingClientRect();
+      const dx = e.clientX - dragRef.current.startX;
 
+      const next = clamp(dragRef.current.startW + dx, minLeft, maxLeft);
+
+      // Optional: wenn du 1:1 absolut zum Container willst, nimm e.clientX - rect.left,
+      // aber startW+dx fühlt sich meist stabiler an (keine Sprünge wenn Cursor vom Handle "wegdriftet").
       onLeftWidthChange(next);
     };
 
     const onUp = () => {
-      draggingRef.current = false;
+      if (dragRef.current) dragRef.current.dragging = false;
     };
 
     window.addEventListener("mousemove", onMove);
@@ -47,13 +54,12 @@ export default function ResizableSplit({
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, [maxLeft, minLeft, onLeftWidthChange]);
+  }, [leftWidth, maxLeft, minLeft, onLeftWidthChange]);
 
   return (
-    <Box id="split-root" sx={{ height: "100%", display: "flex", minWidth: 0 }}>
+    <Box ref={rootRef} sx={{ height: "100%", display: "flex", minWidth: 0 }}>
       <Box sx={{ width: leftWidth, minWidth: 0, bgcolor: "#1e1e1e" }}>{left}</Box>
 
-      {/* Drag handle */}
       <Box
         onMouseDown={onMouseDown}
         sx={{
@@ -61,6 +67,7 @@ export default function ResizableSplit({
           cursor: "col-resize",
           bgcolor: "transparent",
           "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
+          flex: "0 0 auto",
         }}
       />
 

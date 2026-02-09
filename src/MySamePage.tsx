@@ -1,5 +1,5 @@
-import * as React from "react";
-import { Box, Button, Typography, Stack } from "@mui/material";
+// import * as React from "react";
+import { Box, Typography } from "@mui/material";
 
 export type PageState = {
   counter: number;
@@ -15,24 +15,19 @@ export default function MySamePage({
   onChange: (patch: Partial<PageState>) => void;
 }) {
   return (
-    <Box>
-      <Stack spacing={2}>
-        <Typography variant="body2" sx={{ opacity: 0.8 }}>
-          Tab-ID: <code>{tabId}</code>
-        </Typography>
-
-        <Button
-          variant="contained"
-          onClick={() => onChange({ counter: state.counter + 1 })}
-        >
-          Count: {state.counter}
-        </Button>
-
-        <Typography variant="body2" sx={{ opacity: 0.8 }}>
-          Test: Ändere Count in Tab A, wechsel zu Tab B — Counts bleiben getrennt.
-          Reload (F5) — Counts bleiben gespeichert.
-        </Typography>
-      </Stack>
+    <Box
+      sx={{
+        backgroundColor: "green",
+        height: "100%",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Typography variant="h6" sx={{ color: "white", textTransform: "uppercase" }}>
+        map
+      </Typography>
     </Box>
   );
 }

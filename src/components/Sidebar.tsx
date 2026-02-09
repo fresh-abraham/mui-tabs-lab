@@ -33,7 +33,7 @@ export default function Sidebar({
       sx={{
         width,
         flex: "0 0 auto",
-        bgcolor: "#333333",
+        bgcolor: "#1f1f1f",
         borderRight: "1px solid rgba(255,255,255,0.08)",
         display: "flex",
         flexDirection: "column",

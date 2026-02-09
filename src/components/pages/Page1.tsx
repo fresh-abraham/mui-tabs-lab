@@ -4,6 +4,8 @@ import ResizableSplit from "../ResizableSplit";
 import LeftPanels from "./Page1LeftPanels";
 import EditorArea from "./Page1EditorArea";
 import type { WorkspaceState } from "../../types";
+import ContentPaceHolder from "../ContentPaceHolder";
+import MapView from "./MapView";
 
 export default function Page1({
   workspace,
@@ -25,12 +27,17 @@ export default function Page1({
           />
         }
         right={
-          <EditorArea
-            editorGroups={workspace.editorGroups}
-            activeGroupId={workspace.activeEditorGroupId}
-            onChange={(patch) => onUpdate(patch)}
-          />
+          <ContentPaceHolder/>
+          // <MapView/>
         }
+
+        // right={
+        //   <EditorArea
+        //     editorGroups={workspace.editorGroups}
+        //     activeGroupId={workspace.activeEditorGroupId}
+        //     onChange={(patch) => onUpdate(patch)}
+        //   />
+        // }
       />
     </Box>
   );
